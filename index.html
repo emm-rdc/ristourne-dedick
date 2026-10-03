@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ristourne ASARPE</title>
+<meta name="theme-color" content="#cc0000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="ecran-splash" class="ecran active">
+<div class="splash-container">
+<div class="splash-logo">💰</div>
+<h1 class="splash-titre">RISTOURNE</h1>
+<div class="splash-loader"><div class="splash-loader-bar"></div></div>
+</div>
+</div>
+
+<!-- LOGIN -->
+<div id="ecran-login" class="ecran">
+<div class="login-container">
+<div class="login-logo">💰</div>
+<h2 class="login-titre">Connexion</h2>
+<p class="login-sous-titre">Ristourne</p>
+<form onsubmit="seConnecter(event)">
+<div class="login-input-group">
+<label>👤 Nom d'utilisateur</label>
+<input type="text" id="loginUsername" placeholder="Entrez votre nom" required>
+</div>
+<div class="login-input-group">
+<label>🔒 Mot de passe</label>
+<input type="password" id="loginPassword" placeholder="Votre mot de passe" required>
+</div>
+<div id="loginErreur" class="login-erreur"></div>
+<button type="submit" class="login-btn">🔓 Se connecter</button>
+</form>
+<div class="login-info">
+<p><strong>Identifiants par défaut :</strong></p>
+<p>👤 admin | 🔒 asarpe2026</p>
+</div>
+</div>
+</div>
+
+<!-- ACCUEIL -->
+<div id="ecran-accueil" class="ecran">
+<header class="accueil-header">
+<div class="accueil-user">
+<span class="accueil-avatar">👤</span>
+<div>
+<p class="accueil-bonjour">Bonjour,</p>
+<p class="accueil-nom" id="accueilUsername">Utilisateur</p>
+</div>
+</div>
+<button onclick="seDeconnecter()" class="btn-deconnexion">🚪 Déconnexion</button>
+</header>
+<div class="accueil-contenu">
+<h1 class="accueil-titre">Tableau de Bord</h1>
+<p class="accueil-date">📅 <span id="accueilDate">—</span></p>
+<div class="accueil-stats">
+<div class="accueil-stat-card"><div class="accueil-stat-icon">👥</div><div class="accueil-stat-value" id="accueilMembres">0</div><div class="accueil-stat-label">Membres</div></div>
+<div class="accueil-stat-card"><div class="accueil-stat-icon">📅</div><div class="accueil-stat-value" id="accueilRencontres">0</div><div class="accueil-stat-label">Rencontres</div></div>
+<div class="accueil-stat-card alert"><div class="accueil-stat-icon">⚠️</div><div class="accueil-stat-value" id="accueilDettes">0</div><div class="accueil-stat-label">Dettes (FC)</div></div>
+<div class="accueil-stat-card success"><div class="accueil-stat-icon">💰</div><div class="accueil-stat-value" id="accueilSolde">0</div><div class="accueil-stat-label">Solde actuel</div></div>
+</div>
+<div class="accueil-prochain">
+<h3>🎯 Prochain bénéficiaire</h3>
+<p id="accueilProchain">—</p>
+</div>
+<h3 class="accueil-menu-titre">📋 Accès rapide</h3>
+<div class="accueil-menu">
+<button onclick="allerVersApp('onglet-rencontre', 'tab-rencontre')" class="accueil-btn accueil-btn-rencontre"><span class="accueil-btn-icon">📅</span><span>Nouvelle Rencontre</span></button>
+<button onclick="allerVersApp('onglet-membres', 'tab-membres')" class="accueil-btn accueil-btn-membres"><span class="accueil-btn-icon">👥</span><span>Membres</span></button>
+<button onclick="allerVersApp('onglet-historique', 'tab-historique')" class="accueil-btn accueil-btn-historique"><span class="accueil-btn-icon">📋</span><span>Historique</span></button>
+<button onclick="allerVersApp('onglet-stats', 'tab-stats')" class="accueil-btn accueil-btn-stats"><span class="accueil-btn-icon">📊</span><span>Statistiques</span></button>
+<button onclick="allerVersApp('onglet-parametres', 'tab-parametres')" class="accueil-btn accueil-btn-parametres"><span class="accueil-btn-icon">⚙️</span><span>Paramètres</span></button>
+<button onclick="seDeconnecter()" class="accueil-btn accueil-btn-deconnexion"><span class="accueil-btn-icon">🚪</span><span>Déconnexion</span></button>
+</div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="ecran-app" class="ecran">
+<nav class="tabs">
+<button id="tab-accueil" class="tab-btn tab-accueil" onclick="retourAccueil()">🏠</button>
+<button id="tab-rencontre" class="tab-btn active" onclick="ouvrirOnglet('onglet-rencontre', this)">📅 Rencontre</button>
+<button id="tab-membres" class="tab-btn" onclick="ouvrirOnglet('onglet-membres', this)">👥 Membres</button>
+<button id="tab-historique" class="tab-btn" onclick="ouvrirOnglet('onglet-historique', this)">📋 Historique</button>
+<button id="tab-stats" class="tab-btn" onclick="ouvrirOnglet('onglet-stats', this)">📊 Stats</button>
+<button id="tab-parametres" class="tab-btn" onclick="ouvrirOnglet('onglet-parametres', this)">⚙️</button>
+</nav>
+
+<div id="onglet-rencontre" class="onglet active">
+<header><h1>FICHE DE RISTOURNE</h1></header>
+<section class="dashboard">
+<div class="info-card">
+<p>📅 Date : <input type="date" id="dateRencontre" value="2026-08-22"></p>
+<p>🎯 Bénéficiaire : <select id="beneficiaireSelect"></select></p>
+<p>👤 Président : <input type="text" id="presidentInput" value="AGNES BIDIMUETU"></p>
+<p>👤 Trésorier : <input type="text" id="tresorierInput" value="GALEX NGALAMULUME"></p>
+</div>
+</section>
+<section class="table-container">
+<table id="tableRistourne">
+<thead><tr><th>N°</th><th>NOMS</th><th>FC</th><th>USD</th><th>OBS</th><th>Action</th></tr></thead>
+<tbody id="tableBody"></tbody>
+<tfoot><tr class="total-row"><td colspan="2">TOTAL COTISATION</td><td id="totalFC">0</td><td id="totalUSD">0</td><td colspan="2"></td></tr></tfoot>
+</table>
+</section>
+<section class="soustraction">
+<h2>SOUSTRACTION</h2>
+<div class="soustraction-row"><span>CAISSE ASARPE</span><input type="number" id="fraisCaisseFC" value="10000"> FC<input type="number" id="fraisCaisseUSD" value="0"> USD</div>
+<div class="soustraction-row"><span>ADMINISTRATION</span><input type="number" id="fraisAdminFC" value="5000"> FC<input type="number" id="fraisAdminUSD" value="0"> USD</div>
+<div class="soustraction-row total"><span>TOTAL SOUSTRACTION</span><span id="totalSoustractionFC">15000</span> FC<span id="totalSoustractionUSD">0</span> USD</div>
+</section>
+<section class="solde">
+<h2>SOLDE BÉNÉFICIAIRE</h2>
+<div class="solde-box"><span id="soldeFC">0</span> FC</div>
+<div class="solde-box"><span id="soldeUSD">0</span> USD</div>
+</section>
+<section class="signatures">
+<div><p>TRÉSORIER</p><p><strong id="signatureTresorier">GALEX NGALAMULUME</strong></p></div>
+<div><p>PRÉSIDENTE</p><p><strong id="signaturePresident">AGNES BIDIMUETU</strong></p></div>
+</section>
+<div class="actions">
+<button onclick="validerRencontre()" class="btn-success">✅ Valider</button>
+<button onclick="genererPDF()" class="btn-danger">📄 PDF</button>
+<button onclick="genererWord()" class="btn-word">📝 Word</button>
+<button onclick="exporterPDF()">🖨️ Imprimer</button>
+<button onclick="nouvelleRencontre()">🆕 Nouvelle</button>
+<button onclick="sauvegarder()">💾 Sauvegarder</button>
+</div>
+<div class="share-section">
+<h3>📤 PARTAGER LE RÉCAPITULATIF</h3>
+<div class="share-buttons">
+<button onclick="ouvrirWhatsApp(genererMessageRecap())" class="btn-whatsapp">📱 WhatsApp</button>
+<button onclick="ouvrirWhatsAppBusiness(genererMessageRecap())" class="btn-whatsapp-business">💼 Business</button>
+<button onclick="ouvrirMessenger(genererMessageRecap())" class="btn-messenger">💬 Messenger</button>
+<button onclick="copierTexte(genererMessageRecap())" class="btn-copy">📋 Copier</button>
+<button onclick="partagerNatif(genererMessageRecap())" class="btn-share-native">📤 Autres</button>
+</div>
+</div>
+</div>
+
+<div id="onglet-membres" class="onglet">
+<h2>👥 État des Membres</h2>
+<div class="search-bar"><input type="text" id="rechercheMembre" placeholder="🔍 Rechercher..." oninput="afficherMembres()"></div>
+<div class="table-container">
+<table id="tableMembres">
+<thead><tr><th>Nom</th><th>Reçu (FC)</th><th>Remboursé (FC)</th><th>Dette (FC)</th><th>Statut</th><th>Actions</th></tr></thead>
+<tbody id="tableMembresBody"></tbody>
+</table>
+</div>
+<button class="btn-add" onclick="ajouterMembre()">➕ Ajouter un Membre</button>
+</div>
+
+<div id="onglet-historique" class="onglet">
+<h2>📋 Historique des Rencontres</h2>
+<div class="search-bar"><input type="text" id="rechercheHistorique" placeholder="🔍 Rechercher..." oninput="afficherHistorique()"></div>
+<div id="historiqueListe"></div>
+</div>
+
+<div id="onglet-stats" class="onglet">
+<h2>📊 Tableau de Bord</h2>
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="statTotalMembres">0</div><div class="stat-label">Membres</div></div>
+<div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="statTotalRencontres">0</div><div class="stat-label">Rencontres</div></div>
+<div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="statTotalCollecte">0</div><div class="stat-label">Total Collecté</div></div>
+<div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" id="statTotalDistribue">0</div><div class="stat-label">Total Distribué</div></div>
+<div class="stat-card alert"><div class="stat-icon">⚠️</div><div class="stat-value" id="statTotalDette">0</div><div class="stat-label">Dettes</div></div>
+<div class="stat-card success"><div class="stat-icon">✅</div><div class="stat-value" id="statMembresAJour">0</div><div class="stat-label">À jour</div></div>
+</div>
+<h3>🏆 Classement</h3>
+<div id="classementBenef" class="classement"></div>
+</div>
+
+<div id="onglet-parametres" class="onglet">
+<h2>⚙️ Paramètres</h2>
+<div class="param-section info">
+<h3>🔐 Sécurité</h3>
+<p>Changez vos identifiants.</p>
+<button onclick="ouvrirModalSecurite()" class="btn-warning">🔑 Changer les identifiants</button>
+</div>
+<div class="param-section">
+<h3>💾 Sauvegarde</h3>
+<p>Exportez vos données.</p>
+<button onclick="exporterDonnees()" class="btn-success">📤 Exporter</button>
+<button onclick="document.getElementById('importFile').click()" class="btn-warning">📥 Importer</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importerDonnees(event)">
+</div>
+<div class="param-section danger">
+<h3>⚠️ Zone dangereuse</h3>
+<button onclick="reinitialiser()" class="btn-danger">🗑️ Tout réinitialiser</button>
+<button onclick="effacerHistorique()" class="btn-danger">🗑️ Effacer l'historique</button>
+</div>
+<div class="param-section info">
+<h3>ℹ️ Info</h3>
+<p><strong>Version :</strong> 5.0</p>
+<p><strong>Membres :</strong> <span id="infoMembres">0</span></p>
+<p><strong>Rencontres :</strong> <span id="infoRencontres">0</span></p>
+</div>
+</div>
+</div>
+
+<div id="modalSecurite" class="modal">
+<div class="modal-content">
+<h3>🔐 Changer identifiants</h3>
+<div style="text-align:left; margin-bottom:10px;">
+<label>Nouveau nom</label>
+<input type="text" id="newUsername" style="width:100%; padding:10px; margin-top:5px; border:2px solid #ddd; border-radius:5px;">
+</div>
+<div style="text-align:left; margin-bottom:10px;">
+<label>Nouveau mot de passe</label>
+<input type="password" id="newPassword" style="width:100%; padding:10px; margin-top:5px; border:2px solid #ddd; border-radius:5px;">
+</div>
+<div class="modal-actions">
+<button onclick="changerIdentifiants()" class="btn-success">✅ Enregistrer</button>
+<button onclick="document.getElementById('modalSecurite').classList.remove('active')" class="btn-warning">❌ Annuler</button>
+</div>
+</div>
+</div>
+
+<script src="script.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(err => console.log(err));
+    });
+}
+</script>
+</body>
+</html>
