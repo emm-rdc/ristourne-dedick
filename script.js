@@ -1,25 +1,19 @@
 let etat = {
     rencontreActuelle: {
         date: "2026-08-22",
-        beneficiaire: "GALEX NGALAMULUME",
-        president: "AGNES BIDIMUETU",
-        tresorier: "GALEX NGALAMULUME",
+        beneficiaire: "",
+        president: "",
+        tresorier: "",
         fraisCaisseFC: 10000, fraisCaisseUSD: 0,
         fraisAdminFC: 5000, fraisAdminUSD: 0,
         membres: []
     },
     historique: [],
     membres: [],
-    securite: { username: "admin", password: "asarpe2026" }
+    securite: { username: "admin", password: "rebate2026" }
 };
 
-const listeMembresBase = [
-    "AGNES BIDIMUETU", "AUGU TSHIBUABUA", "BENJAMIN TUENDELE",
-    "CHRISTIAN BEYA", "DAVID KALOMBA", "DEDICK MPIANA",
-    "GALEX NGALAMULUME", "JUSTIN KANKONDE", "LEONARD MUTSHIPAYI",
-    "NATHAN LUSAMBA", "OMERT TSHIBAMBA", "PASCAL MUMPELE",
-    "WILLY KABEYA"
-];
+const listeMembresBase = [];
 
 function afficherEcran(id) {
     document.querySelectorAll(".ecran").forEach(e => e.classList.remove("active"));
@@ -32,7 +26,7 @@ window.onload = function() {
     afficherEcran("ecran-splash");
     init();
     setTimeout(() => {
-        const s = sessionStorage.getItem("ristourne_session");
+        const s = sessionStorage.getItem("rebate_session");
         if (s) {
             document.getElementById("accueilUsername").textContent = s;
             afficherEcran("ecran-accueil");
@@ -50,7 +44,7 @@ function seConnecter(e) {
     const err = document.getElementById("loginErreur");
     if (!u || !p) { err.textContent = "❌ Remplissez tous les champs."; err.classList.add("active"); return; }
     if (u === etat.securite.username && p === etat.securite.password) {
-        sessionStorage.setItem("ristourne_session", u);
+        sessionStorage.setItem("rebate_session", u);
         document.getElementById("accueilUsername").textContent = u;
         err.classList.remove("active");
         document.getElementById("loginPassword").value = "";
@@ -66,7 +60,7 @@ function seConnecter(e) {
 function seDeconnecter() {
     if (!confirm("🚪 Se déconnecter ?")) return;
     sauvegarderSansAlerte();
-    sessionStorage.removeItem("ristourne_session");
+    sessionStorage.removeItem("rebate_session");
     document.getElementById("loginUsername").value = "";
     document.getElementById("loginPassword").value = "";
     document.getElementById("loginErreur").classList.remove("active");
@@ -82,7 +76,7 @@ function afficherAccueil() {
     const s = document.getElementById("soldeFC");
     document.getElementById("accueilSolde").textContent = s ? s.textContent : "0";
     const p = etat.membres.find(m => m.totalRecuFC === 0);
-    document.getElementById("accueilProchain").textContent = p ? "👤 " + p.nom : "🔄 Nouveau cycle";
+    document.getElementById("accueilProchain").textContent = p ? "👤 " + p.nom : "➕ Ajoutez des membres";
 }
 
 function allerVersApp(ongletId, tabId) {
@@ -113,20 +107,32 @@ function ouvrirOnglet(id, btn) {
 }
 
 function init() {
-    const s = localStorage.getItem("ristourneASARPE_V5");
+    const s = localStorage.getItem("rebate_tshisangilu_V1");
     if (s) {
-        try { const d = JSON.parse(s); const sec = etat.securite; etat = d; if (!etat.securite) etat.securite = sec; }
-        catch (e) { initialiserDonnees(); }
-    } else { initialiserDonnees(); }
+        try {
+            const d = JSON.parse(s);
+            const sec = etat.securite;
+            etat = d;
+            if (!etat.securite) etat.securite = sec;
+        } catch (e) { initialiserDonnees(); }
+    } else {
+        initialiserDonnees();
+    }
     const select = document.getElementById("beneficiaireSelect");
     if (select) {
         select.innerHTML = "";
-        etat.membres.forEach(m => {
+        if (etat.membres.length === 0) {
             const o = document.createElement("option");
-            o.value = m.nom; o.textContent = m.nom;
-            if (m.nom === etat.rencontreActuelle.beneficiaire) o.selected = true;
+            o.value = ""; o.textContent = "— Ajoutez des membres —";
             select.appendChild(o);
-        });
+        } else {
+            etat.membres.forEach(m => {
+                const o = document.createElement("option");
+                o.value = m.nom; o.textContent = m.nom;
+                if (m.nom === etat.rencontreActuelle.beneficiaire) o.selected = true;
+                select.appendChild(o);
+            });
+        }
     }
     if (document.getElementById("dateRencontre")) {
         document.getElementById("dateRencontre").value = etat.rencontreActuelle.date;
@@ -183,6 +189,10 @@ function genererTableau() {
     const tb = document.getElementById("tableBody");
     if (!tb) return;
     tb.innerHTML = "";
+    if (etat.rencontreActuelle.membres.length === 0) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#666; padding:15px;">Aucun membre. Allez dans "Membres" pour en ajouter.</td></tr>';
+        return;
+    }
     etat.rencontreActuelle.membres.forEach((m, i) => {
         const tr = document.createElement("tr");
         tr.id = "row-" + m.id;
@@ -249,6 +259,7 @@ function calculerTotaux() {
     document.getElementById("soldeFC").textContent = soldeFC.toLocaleString();
     document.getElementById("soldeUSD").textContent = soldeUSD.toLocaleString();
     const bn = document.getElementById("beneficiaireSelect").value;
+    if (!bn) return;
     const b = etat.rencontreActuelle.membres.find(m => m.nom === bn);
     if (b) {
         b.statut = "RECU"; b.fc = soldeFC; b.usd = soldeUSD;
@@ -265,13 +276,14 @@ function mettreAJourSignatures() {
     const p = document.getElementById("presidentInput");
     const t = document.getElementById("tresorierInput");
     const d = document.getElementById("dateRencontre");
-    if (p) { const v = p.value.trim() || "PRÉSIDENT"; etat.rencontreActuelle.president = v; document.getElementById("signaturePresident").textContent = v; }
-    if (t) { const v = t.value.trim() || "TRÉSORIER"; etat.rencontreActuelle.tresorier = v; document.getElementById("signatureTresorier").textContent = v; }
+    if (p) { const v = p.value.trim() || "—"; etat.rencontreActuelle.president = v; document.getElementById("signaturePresident").textContent = v; }
+    if (t) { const v = t.value.trim() || "—"; etat.rencontreActuelle.tresorier = v; document.getElementById("signatureTresorier").textContent = v; }
     if (d) etat.rencontreActuelle.date = d.value;
     sauvegarderSansAlerte();
 }
 
 function validerRencontre() {
+    if (!etat.rencontreActuelle.beneficiaire) { alert("⚠️ Sélectionnez un bénéficiaire."); return; }
     if (!confirm("⚠️ Valider cette rencontre ?")) return;
     const bn = document.getElementById("beneficiaireSelect").value;
     const bg = etat.membres.find(m => m.nom === bn);
@@ -362,6 +374,7 @@ function ajouterMembre() {
     const id = Math.max(...etat.membres.map(m => m.id), 0) + 1;
     etat.membres.push({ id, nom: n.trim(), totalRecuFC: 0, totalRecuUSD: 0, totalRembourseFC: 0, totalRembourseUSD: 0, detteFC: 0, detteUSD: 0 });
     etat.rencontreActuelle.membres.push({ id, nom: n.trim(), fc: 0, usd: 0, statut: "", aPasseLeTour: false });
+    if (!etat.rencontreActuelle.beneficiaire) etat.rencontreActuelle.beneficiaire = n.trim();
     sauvegarderSansAlerte();
     init();
     alert(`✅ ${n} ajouté !`);
@@ -423,7 +436,7 @@ function exporterDonnees() {
     const blob = new Blob([JSON.stringify(etat, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "ristourne_" + new Date().toISOString().split('T')[0] + ".json";
+    a.download = "rebate_" + new Date().toISOString().split('T')[0] + ".json";
     a.click();
     alert("📤 Exporté !");
 }
@@ -482,7 +495,7 @@ function genererMessageRecap() {
     const tUSD = document.getElementById("totalUSD").textContent;
     const sFC = document.getElementById("soldeFC").textContent;
     const sUSD = document.getElementById("soldeUSD").textContent;
-    let m = "*💰 RISTOURNE ASARPE*\n\n📅 Date : " + date + "\n🎯 Bénéficiaire : " + b + "\n👤 Président : " + p + "\n👤 Trésorier : " + t + "\n\n📊 Total : " + tFC + " FC | " + tUSD + " USD\n🎯 Solde : " + sFC + " FC | " + sUSD + " USD\n\n👥 Détail :\n";
+    let m = "*💰 REBATE-TSHISANGILU*\n\n📅 Date : " + date + "\n🎯 Bénéficiaire : " + b + "\n👤 Président : " + p + "\n👤 Trésorier : " + t + "\n\n📊 Total : " + tFC + " FC | " + tUSD + " USD\n🎯 Solde : " + sFC + " FC | " + sUSD + " USD\n\n👥 Détail :\n";
     etat.rencontreActuelle.membres.forEach((x, i) => {
         if (x.statut === "PASSE") m += (i + 1) + ". ⏭️ " + x.nom + " (passé)\n";
         else if (x.statut === "RECU") m += (i + 1) + ". 🎁 " + x.nom + " : REÇOIT " + x.fc.toLocaleString() + " FC\n";
@@ -540,7 +553,7 @@ function copier(t) {
 }
 
 function partagerNatif(m) {
-    if (navigator.share) navigator.share({ title: "Ristourne", text: m }).catch(() => {});
+    if (navigator.share) navigator.share({ title: "REBATE-TSHISANGILU", text: m }).catch(() => {});
     else copierTexte(m);
 }
 
@@ -558,7 +571,7 @@ function genererPDF() {
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text("FICHE DE RISTOURNE - COMITE ASARPE", 105, 13, { align: "center" });
+        doc.text("REBATE-TSHISANGILU", 105, 13, { align: "center" });
         doc.setFillColor(0, 0, 204);
         doc.rect(0, 20, 210, 25, "F");
         doc.setTextColor(255, 255, 255);
@@ -595,7 +608,7 @@ function genererPDF() {
         doc.text("SOLDE BENEFICIAIRE", 15, y + 6);
         doc.setFontSize(14);
         doc.text(sFC + " FC  |  " + sUSD + " USD", 15, y + 12);
-        doc.save("Ristourne_" + date.replace(/\//g, '-') + "_" + b.replace(/\s/g, '_') + ".pdf");
+        doc.save("REBATE_" + date.replace(/\//g, '-') + "_" + b.replace(/\s/g, '_') + ".pdf");
         alert("✅ PDF généré !");
     } catch (e) { alert("❌ Erreur : " + e.message); }
 }
@@ -610,7 +623,7 @@ function genererWord() {
         const t = document.getElementById("tresorierInput").value;
         const tFC = document.getElementById("totalFC").textContent;
         const sFC = document.getElementById("soldeFC").textContent;
-        const titre = new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "FICHE DE RISTOURNE - COMITE ASARPE", bold: true, size: 32, color: "CC0000" })] });
+        const titre = new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "REBATE-TSHISANGILU", bold: true, size: 32, color: "CC0000" })] });
         const infos = new Paragraph({ spacing: { before: 200, after: 200 }, children: [
             new TextRun({ text: "Date : " + date + "\n" }),
             new TextRun({ text: "Beneficiaire : " + b + "\n" }),
@@ -637,10 +650,10 @@ function genererWord() {
         const sol = new Paragraph({ spacing: { before: 300 }, alignment: AlignmentType.CENTER, children: [new TextRun({ text: "SOLDE : " + sFC + " FC", bold: true, size: 28, color: "CC0000" })] });
         const doc = new Document({ sections: [{ children: [titre, infos, tab, tot, sol] }] });
         Packer.toBlob(doc).then(blob => {
-            if (typeof saveAs === "function") saveAs(blob, "Ristourne_" + date.replace(/\//g, '-') + "_" + b.replace(/\s/g, '_') + ".docx");
+            if (typeof saveAs === "function") saveAs(blob, "REBATE_" + date.replace(/\//g, '-') + "_" + b.replace(/\s/g, '_') + ".docx");
             else {
                 const u = URL.createObjectURL(blob);
-                const a = document.createElement("a"); a.href = u; a.download = "ristourne.docx"; a.click();
+                const a = document.createElement("a"); a.href = u; a.download = "rebate.docx"; a.click();
             }
             alert("✅ Word généré !");
         });
@@ -667,14 +680,14 @@ function sauvegarderSansAlerte() {
         etat.rencontreActuelle.president = document.getElementById("presidentInput").value;
         etat.rencontreActuelle.tresorier = document.getElementById("tresorierInput").value;
     }
-    localStorage.setItem("ristourneASARPE_V5", JSON.stringify(etat));
+    localStorage.setItem("rebate_tshisangilu_V1", JSON.stringify(etat));
 }
 
 function reinitialiser() {
     if (!confirm("⚠️ Toutes les données seront effacées. Continuer ?")) return;
     if (!confirm("Vraiment sûr ?")) return;
-    localStorage.removeItem("ristourneASARPE_V5");
-    sessionStorage.removeItem("ristourne_session");
+    localStorage.removeItem("rebate_tshisangilu_V1");
+    sessionStorage.removeItem("rebate_session");
     location.reload();
 }
 

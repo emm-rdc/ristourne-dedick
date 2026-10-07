@@ -9,8 +9,7 @@ body { background-color: #f4f4f4; padding: 0; font-size: 14px; }
 .splash-container { color: white; }
 .splash-logo { font-size: 120px; animation: splashZoom 1.5s ease-in-out infinite alternate; margin-bottom: 20px; }
 @keyframes splashZoom { 0% { transform: scale(1) rotate(-5deg); } 100% { transform: scale(1.2) rotate(5deg); } }
-.splash-titre { font-size: 40px; font-weight: bold; letter-spacing: 3px; margin-bottom: 10px; animation: splashFadeIn 1s ease-out; }
-.splash-sous-titre { font-size: 18px; opacity: 0.9; margin-bottom: 40px; animation: splashFadeIn 1.5s ease-out; }
+.splash-titre { font-size: 40px; font-weight: bold; letter-spacing: 3px; margin-bottom: 40px; animation: splashFadeIn 1s ease-out; }
 @keyframes splashFadeIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
 .splash-loader { width: 250px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden; margin: 0 auto; }
 .splash-loader-bar { height: 100%; background: white; width: 0%; border-radius: 10px; animation: splashLoad 3s ease-in-out forwards; }

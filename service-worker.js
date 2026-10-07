@@ -1,4 +1,4 @@
-const CACHE_NAME = "ristourne-asarpe-v5";
+const CACHE_NAME = "rebate-tshisangilu-v1";
 const FICHIERS_CACHE = ["./", "./index.html", "./style.css", "./script.js", "./manifest.json"];
 
 self.addEventListener("install", e => {

@@ -1,7 +1,7 @@
 {
-    "name": "Ristourne ASARPE",
-    "short_name": "Ristourne",
-    "description": "Gestion de ristourne - Comité ASARPE",
+    "name": "REBATE-TSHISANGILU",
+    "short_name": "REBATE",
+    "description": "Application REBATE-TSHISANGILU",
     "start_url": "./index.html",
     "display": "standalone",
     "orientation": "portrait",
